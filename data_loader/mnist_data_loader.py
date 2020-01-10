@@ -4,6 +4,7 @@ from typing import Optional, List, Generator, Tuple
 
 import numpy as np
 from dotmap import DotMap
+import tensorflow as tf
 from tensorpack.dataflow import BatchData, DataFlow
 
 from base.base_data_loader import BaseDataLoader
@@ -40,7 +41,7 @@ def load_data() -> DotMap:
     num_test  = test_x.shape[0]
 
     train_x = train_x.reshape((num_train, 28, 28, 1))
-    train_y_onehot = np.zeros((num_train, 28, 28), dtype=float)
+    train_y_onehot = np.zeros((num_train, 10), dtype=float)
     train_y_onehot[np.arange(num_train), train_y] = 1.
 
     test_x = test_x.reshape((num_test, 28, 28, 1))

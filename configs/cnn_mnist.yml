@@ -10,7 +10,6 @@ model:
   clipvalue: 10
   clipnorm: 10
 trainer:
-  epoch_to_continue: 40
   num_epochs: 100
   batch_size: 128
   label_smoothing: false
