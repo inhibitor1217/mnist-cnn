@@ -174,8 +174,9 @@ class CNNTrainer(BaseTrainer):
             # additional log
             epoch_logs['lr/train'] = K.get_value(self.model.optimizer.lr)
 
-            test_loss = self.predict_test_images()
+            test_loss, test_accuracy = self.predict_test_images()
             epoch_logs['loss/test'] = test_loss
+            epoch_logs['accuracy/test'] = test_accuracy
 
             self.on_epoch_end(epoch, epoch_logs)
 
@@ -202,7 +203,7 @@ class CNNTrainer(BaseTrainer):
         correct /= data_size
         loss /= steps
         print(f'Test set accuracy: {correct}')
-        return loss
+        return loss, correct
 
     def on_batch_begin(self, batch: int, logs: Optional[dict] = None) -> None:
         for model_name in self.model_callbacks:

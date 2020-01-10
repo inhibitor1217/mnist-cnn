@@ -10,7 +10,7 @@ model:
   clipvalue: 10
   clipnorm: 10
 trainer:
-  num_epochs: 50
+  num_epochs: 100
   batch_size: 128
   label_smoothing: false
   use_lr_decay: false
