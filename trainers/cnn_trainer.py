@@ -108,11 +108,19 @@ class CNNTrainer(BaseTrainer):
         train_data_gen = self.data_loader.get_train_data_generator()
         batch_size = self.config.trainer.batch_size
 
+        test_data_gen = self.data_loader.get_test_data_generator()
+
         steps_per_epoch = self.data_loader.get_train_data_size() // batch_size
         if self.config.trainer.use_horovod:
             import horovod.keras as hvd
             steps_per_epoch //= hvd.size()
         assert steps_per_epoch > 0
+
+        test_steps_per_epoch = self.data_loader.get_test_data_size() // batch_size
+        if self.config.trainer.use_horovod:
+            import horovod.keras as hvd
+            test_steps_per_epoch //= hvd.size()
+        assert test_steps_per_epoch > 0
 
         epochs = self.config.trainer.num_epochs
         start_time = datetime.datetime.now()
@@ -130,8 +138,8 @@ class CNNTrainer(BaseTrainer):
                 [loss, accuracy] = self.model.train_on_batch(x, y)
 
                 metric_logs = {
-                    'loss': loss,
-                    'accuracy': accuracy
+                    'loss/train': loss,
+                    'accuracy/train': accuracy
                 }
 
                 batch_logs.update(metric_logs)
@@ -164,7 +172,10 @@ class CNNTrainer(BaseTrainer):
             epoch_logs = dict(epoch_logs)
 
             # additional log
-            epoch_logs['train/lr'] = K.get_value(self.model.optimizer.lr)
+            epoch_logs['lr/train'] = K.get_value(self.model.optimizer.lr)
+
+            test_loss = self.predict_test_images()
+            epoch_logs['loss/test'] = test_loss
 
             self.on_epoch_end(epoch, epoch_logs)
 
@@ -177,16 +188,21 @@ class CNNTrainer(BaseTrainer):
         
         steps = data_size // self.config.trainer.batch_size
         correct = 0.
-
+        loss = 0.
         for _ in range(steps):
             x, y = next(data_generator)
             result_raw = self.model.predict(x)
+            [_loss, _] = self.model.test_on_batch(x, y)
             result = result_raw.argmax(axis=1)
-            correct_labels = np.sum(result == y)
+            result_y = y.argmax(axis=1)
+            correct_labels = np.sum(result == result_y)
             correct += correct_labels
+            loss += _loss
 
         correct /= data_size
+        loss /= steps
         print(f'Test set accuracy: {correct}')
+        return loss
 
     def on_batch_begin(self, batch: int, logs: Optional[dict] = None) -> None:
         for model_name in self.model_callbacks:

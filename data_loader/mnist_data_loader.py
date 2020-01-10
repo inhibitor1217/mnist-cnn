@@ -45,12 +45,14 @@ def load_data() -> DotMap:
     train_y_onehot[np.arange(num_train), train_y] = 1.
 
     test_x = test_x.reshape((num_test, 28, 28, 1))
+    test_y_onehot = np.zeros((num_test, 10), dtype=float)
+    test_y_onehot[np.arange(num_test), test_y] = 1.
 
     data: DotMap = DotMap({ 
         'train_x': train_x, 
         'train_y': train_y_onehot, 
         'test_x':  test_x, 
-        'test_y':  test_y 
+        'test_y':  test_y_onehot 
     })
 
     return data
